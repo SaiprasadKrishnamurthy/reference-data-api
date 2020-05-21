@@ -32,7 +32,59 @@ var doc = `{
     },
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
-    "paths": {}
+    "paths": {
+        "/tags": {
+            "get": {
+                "description": "Get tags for domains.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get tags for domains.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Input Text",
+                        "name": "text",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Tags"
+                        },
+                        "headers": {
+                            "Token": {
+                                "type": "string",
+                                "description": "qwerty"
+                            }
+                        }
+                    },
+                    "400": {},
+                    "404": {},
+                    "500": {}
+                }
+            }
+        }
+    },
+    "definitions": {
+        "models.Tags": {
+            "type": "object",
+            "properties": {
+                "inputText": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    }
 }`
 
 type swaggerInfo struct {

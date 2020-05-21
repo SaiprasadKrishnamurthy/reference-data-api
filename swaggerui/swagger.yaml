@@ -1,4 +1,14 @@
 basePath: /api/v1
+definitions:
+  models.Tags:
+    properties:
+      inputText:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+    type: object
 host: localhost:8082
 info:
   contact:
@@ -12,5 +22,29 @@ info:
   termsOfService: http://swagger.io/terms/
   title: Web API written in Golang
   version: "1.0"
-paths: {}
+paths:
+  /tags:
+    get:
+      description: Get tags for domains.
+      parameters:
+      - description: Input Text
+        in: query
+        name: text
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          headers:
+            Token:
+              description: qwerty
+              type: string
+          schema:
+            $ref: '#/definitions/models.Tags'
+        "400": {}
+        "404": {}
+        "500": {}
+      summary: Get tags for domains.
 swagger: "2.0"

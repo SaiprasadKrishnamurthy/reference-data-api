@@ -1,7 +1,7 @@
-## A Sample REST API with Go
-Demonstrates a decent MVC pattern, configuration management, messaging using NATS io, database connectivity.
+## A Simple Reference Data API written in GO
+REST API to serve reference data (words, tags, names, cities etc etc).
 
-``go get github.com/saiprasadkrishnamurthy/web-api
+``go get github.com/saiprasadkrishnamurthy/reference-data-api
 ``
 
 ## Swagger UI

@@ -12,6 +12,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/saiprasadkrishnamurthy/reference-data-api/config"
 	"github.com/saiprasadkrishnamurthy/reference-data-api/models"
+	"github.com/saiprasadkrishnamurthy/reference-data-api/utils"
 )
 
 // TagsController echos.
@@ -19,36 +20,40 @@ type TagsController struct {
 	BaseController
 }
 
-// Tags get tags.
+// Tags from database.
+// Tags echos.
+// @Summary Get tags for domains.
+// @Description Get tags for domains.
+// @Produce  json
+// @Param text query string true "Input Text"
+// @Success 200 {object} models.Tags
+// @Header 200 {string} Token "qwerty"
+// @Failure 400
+// @Failure 404
+// @Failure 500
+// @Router /tags [get]
 func (c *TagsController) Tags(rw http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	c1 := make(chan map[string]interface{})
 	c2 := make(chan map[string]interface{})
 	inputQuery := r.URL.Query().Get("text")
 	//domainType := r.URL.Query().Get("domain")
 
-	go dictionaryApi(config.GetSpellCheckerAPI(), inputQuery, c1)
+	go dictionaryAPI(config.GetSpellCheckerAPI(), inputQuery, c1)
 	spellCheckerResponse := fmt.Sprintf("%v", extractResult(c1, 2)["word"])
 
-	go dictionaryApi(config.GetSoundsLikeAPI(), inputQuery, c2)
+	go dictionaryAPI(config.GetSoundsLikeAPI(), inputQuery, c2)
 	soundsLikeResponse := fmt.Sprintf("%v", extractResult(c2, 2)["word"])
 
 	tagValues := []string{spellCheckerResponse, soundsLikeResponse}
 
-	temp := tagValues[:0]
-	for _, x := range tagValues {
-		if x != inputQuery {
-			temp = append(temp, x)
-		}
-	}
-	tagValues = temp
-	tags := models.Tags{InputText: inputQuery, Tags: tagValues}
+	tags := models.Tags{InputText: inputQuery, Tags: utils.Unique(tagValues)}
 	response, _ := json.Marshal(tags)
 	rw.Header().Set("Content-Type", "application/json")
 	rw.Write(response)
 	return nil // no error
 }
 
-func dictionaryApi(api string, word string, c chan map[string]interface{}) {
+func dictionaryAPI(api string, word string, c chan map[string]interface{}) {
 	client := http.Client{
 		Timeout: 5 * time.Second,
 	}
