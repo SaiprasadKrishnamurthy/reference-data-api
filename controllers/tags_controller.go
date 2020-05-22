@@ -38,14 +38,15 @@ func (c *TagsController) Tags(rw http.ResponseWriter, r *http.Request, p httprou
 	inputQuery := r.URL.Query().Get("text")
 	//domainType := r.URL.Query().Get("domain")
 
+	tagValues := []string{}
+
 	go dictionaryAPI(config.GetSpellCheckerAPI(), inputQuery, c1)
-	spellCheckerResponse := fmt.Sprintf("%v", extractResult(c1, 2)["word"])
+	spellCheckerResponse := fmt.Sprintf("%v", utils.ExtractResult(c1, 2)["word"])
 
 	go dictionaryAPI(config.GetSoundsLikeAPI(), inputQuery, c2)
-	soundsLikeResponse := fmt.Sprintf("%v", extractResult(c2, 2)["word"])
+	soundsLikeResponse := fmt.Sprintf("%v", utils.ExtractResult(c2, 2)["word"])
 
-	tagValues := []string{spellCheckerResponse, soundsLikeResponse}
-
+	tagValues = append(tagValues, spellCheckerResponse, soundsLikeResponse)
 	tags := models.Tags{InputText: inputQuery, Tags: utils.Unique(tagValues)}
 	response, _ := json.Marshal(tags)
 	rw.Header().Set("Content-Type", "application/json")
@@ -71,13 +72,4 @@ func dictionaryAPI(api string, word string, c chan map[string]interface{}) {
 		return
 	}
 	c <- map[string]interface{}{"word": word}
-}
-
-func extractResult(c chan map[string]interface{}, timeoutSeconds int) map[string]interface{} {
-	select {
-	case res := <-c:
-		return res
-	case <-time.After(time.Duration(timeoutSeconds) * time.Second):
-		return map[string]interface{}{}
-	}
 }
