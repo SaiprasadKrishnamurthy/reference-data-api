@@ -2,7 +2,7 @@
     "swagger": "2.0",
     "info": {
         "description": "This is a simple REST API written in Golang to demonstrate it's simplicity.",
-        "title": "Web API written in Golang",
+        "title": "Reference Data API written in Golang",
         "termsOfService": "http://swagger.io/terms/",
         "contact": {
             "name": "Sai Kris",

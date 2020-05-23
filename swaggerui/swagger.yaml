@@ -20,7 +20,7 @@ info:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   termsOfService: http://swagger.io/terms/
-  title: Web API written in Golang
+  title: Reference Data API written in Golang
   version: "1.0"
 paths:
   /tags:

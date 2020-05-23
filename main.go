@@ -19,9 +19,9 @@ func init() {
 
 }
 
-// @title Web API written in Golang
+// @title Reference Data API written in Golang
 // @version 1.0
-// @description This is a simple REST API written in Golang to demonstrate it's simplicity.
+// @description Reference Data API  Golang to demonstrate it's simplicity.
 // @termsOfService http://swagger.io/terms/
 
 // @contact.name Sai Kris

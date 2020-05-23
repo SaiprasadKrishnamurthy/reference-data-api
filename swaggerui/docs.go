@@ -102,7 +102,7 @@ var SwaggerInfo = swaggerInfo{
 	Host:        "localhost:8082",
 	BasePath:    "/api/v1",
 	Schemes:     []string{},
-	Title:       "Web API written in Golang",
+	Title:       "Reference Data API written in Golang",
 	Description: "This is a simple REST API written in Golang to demonstrate it's simplicity.",
 }
 
