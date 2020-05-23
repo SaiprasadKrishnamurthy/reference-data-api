@@ -2,13 +2,11 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
+	"sort"
 	"strings"
-	"time"
 
-	"io/ioutil"
-
+	"github.com/agnivade/levenshtein"
 	"github.com/julienschmidt/httprouter"
 	"github.com/saiprasadkrishnamurthy/reference-data-api/config"
 	"github.com/saiprasadkrishnamurthy/reference-data-api/models"
@@ -19,6 +17,8 @@ import (
 type TagsController struct {
 	BaseController
 }
+
+const totalCandidates = 20
 
 // Tags from database.
 // Tags echos.
@@ -33,43 +33,60 @@ type TagsController struct {
 // @Failure 500
 // @Router /tags [get]
 func (c *TagsController) Tags(rw http.ResponseWriter, r *http.Request, p httprouter.Params) error {
-	c1 := make(chan map[string]interface{})
-	c2 := make(chan map[string]interface{})
-	inputQuery := r.URL.Query().Get("text")
+	input := r.URL.Query().Get("text")
 	//domainType := r.URL.Query().Get("domain")
 
-	tagValues := []string{}
+	inputTokens := strings.Fields(input)
 
-	go dictionaryAPI(config.GetSpellCheckerAPI(), inputQuery, c1)
-	spellCheckerResponse := fmt.Sprintf("%v", utils.ExtractResult(c1, 2)["word"])
+	tokens := config.GetTokensFromDictionary()
 
-	go dictionaryAPI(config.GetSoundsLikeAPI(), inputQuery, c2)
-	soundsLikeResponse := fmt.Sprintf("%v", utils.ExtractResult(c2, 2)["word"])
+	var tagsOfAllWords = [][]string{}
 
-	tagValues = append(tagValues, spellCheckerResponse, soundsLikeResponse)
-	tags := models.Tags{InputText: inputQuery, Tags: utils.Unique(tagValues)}
+	for _, t := range inputTokens {
+		s := findWords(t, tokens)
+		tagsOfAllWords = append(tagsOfAllWords, s)
+	}
+	o := []string{}
+	for i := 0; i <= config.SpellCheckerTopN(); i++ {
+		s := ""
+		for _, v := range tagsOfAllWords {
+			if i < len(v) {
+				s += v[i] + " "
+			}
+		}
+		if len(strings.TrimSpace(s)) > 0 {
+			o = append(o, strings.TrimSpace(s))
+		}
+	}
+
+	tags := models.Tags{InputText: input, Tags: utils.Unique(o)}
 	response, _ := json.Marshal(tags)
 	rw.Header().Set("Content-Type", "application/json")
 	rw.Write(response)
 	return nil // no error
 }
 
-func dictionaryAPI(api string, word string, c chan map[string]interface{}) {
-	client := http.Client{
-		Timeout: 5 * time.Second,
+func findWords(input string, tokens []string) []string {
+	closestIndex := sort.Search(len(tokens), func(i int) bool { return input <= tokens[i] })
+	radius := totalCandidates / 2
+
+	var start, end int
+	if start = closestIndex - radius; start <= 0 {
+		start = 0
 	}
-	url := fmt.Sprintf(api, strings.Replace(word, " ", "%20", -1))
-	resp, error := client.Get(url)
-	if error == nil {
-		bodyBytes, _ := ioutil.ReadAll(resp.Body)
-		var result []map[string]interface{}
-		e := json.Unmarshal(bodyBytes, &result)
-		if e == nil && len(result) > 0 {
-			c <- result[0]
-			return
-		}
-		c <- map[string]interface{}{"word": word}
-		return
+	if end = closestIndex + radius; start >= len(tokens) {
+		end = 0
 	}
-	c <- map[string]interface{}{"word": word}
+	probables := make([]string, totalCandidates)
+	copy(probables, tokens[start:end])
+	sort.Slice(probables, func(i, j int) bool {
+		iDistance := levenshtein.ComputeDistance(input, probables[i])
+		jDistance := levenshtein.ComputeDistance(input, probables[j])
+		return iDistance <= jDistance
+	})
+	if len(probables) <= config.SpellCheckerTopN() {
+		return probables
+	}
+	return probables[0:config.SpellCheckerTopN()]
+
 }

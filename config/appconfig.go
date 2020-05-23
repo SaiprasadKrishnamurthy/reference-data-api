@@ -1,15 +1,20 @@
 package config
 
 import (
+	"bufio"
+	"log"
 	"os"
+	"path/filepath"
+	"sort"
 )
+
+var tokens []string
 
 // InitConfigs initializes all the necessary configs once.
 func InitConfigs() {
-	initDB()
-}
 
-func initDB() {
+	path, _ := filepath.Abs("dictionaries/en-GB.txt")
+	loadDictionary(path)
 
 }
 
@@ -22,17 +27,36 @@ func GetPort() string {
 	return port
 }
 
-// GetSpellCheckerAPI returns the spell checker api url.
-func GetSpellCheckerAPI() string {
-	return "https://api.datamuse.com/words?sp=%s"
-}
-
-// GetSoundsLikeAPI returns the sounds like api url.
-func GetSoundsLikeAPI() string {
-	return "https://api.datamuse.com/words?sl=%s"
+// SpellCheckerTopN returns the sounds like api url.
+func SpellCheckerTopN() int {
+	return 3
 }
 
 // APIVersion public API version.
 func APIVersion() string {
 	return "v1"
+}
+
+// GetTokensFromDictionary gets the word dictionary.
+func GetTokensFromDictionary() []string {
+	return tokens
+}
+
+func loadDictionary(dictionaryPath string) {
+	tokens = []string{}
+
+	file, err := os.Open(dictionaryPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		token := scanner.Text()
+		tokens = append(tokens, token)
+		if err := scanner.Err(); err != nil {
+			log.Fatal(err)
+		}
+	}
+	sort.Strings(tokens)
 }
