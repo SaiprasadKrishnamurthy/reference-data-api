@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"encoding/json"
 	"net/http"
 	"sort"
 	"strings"
@@ -59,10 +58,9 @@ func (c *TagsController) Tags(rw http.ResponseWriter, r *http.Request, p httprou
 		}
 	}
 
-	tags := models.Tags{InputText: input, Tags: utils.Unique(o)}
-	response, _ := json.Marshal(tags)
+	tags := models.Tags{APIObject: models.APIObject{}, InputText: input, Tags: utils.Unique(o)}
 	rw.Header().Set("Content-Type", "application/json")
-	rw.Write(response)
+	tags.ToJSON(rw)
 	return nil // no error
 }
 
