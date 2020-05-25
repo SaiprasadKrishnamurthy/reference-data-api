@@ -1,8 +1,13 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"time"
 
 	"github.com/saiprasadkrishnamurthy/reference-data-api/routes"
 
@@ -42,7 +47,25 @@ func main() {
 	http.Handle("/swaggerui/", http.StripPrefix("/swaggerui/", fs))
 	http.Handle("/", r)
 
-	if err := http.ListenAndServe(":"+port, nil); err != nil {
-		log.Fatalln(err)
+	server := &http.Server{
+		Addr:         port,
+		ReadTimeout:  3 * time.Second,
+		WriteTimeout: 3 * time.Second,
+		IdleTimeout:  120 * time.Second,
 	}
+	go func() {
+		if err := server.ListenAndServe(); err != nil {
+			log.Fatalln(err)
+		}
+	}()
+
+	osChan := make(chan os.Signal)
+	signal.Notify(osChan, os.Interrupt)
+	signal.Notify(osChan, os.Kill)
+
+	sig := <-osChan
+	fmt.Println("Received Signal: ", sig)
+
+	tc, _ := context.WithTimeout(context.Background(), 5*time.Second)
+	server.Shutdown(tc)
 }

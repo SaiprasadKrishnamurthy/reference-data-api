@@ -22,7 +22,7 @@ func InitConfigs() {
 func GetPort() string {
 	port := os.Getenv("SERVER_PORT")
 	if port == "" {
-		port = "8082"
+		port = ":8082"
 	}
 	return port
 }
