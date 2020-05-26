@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/saiprasadkrishnamurthy/reference-data-api/routes"
+	"github.com/urfave/negroni"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/saiprasadkrishnamurthy/reference-data-api/config"
@@ -53,17 +54,18 @@ func main() {
 		WriteTimeout: 3 * time.Second,
 		IdleTimeout:  120 * time.Second,
 	}
+	n := negroni.Classic()
+	n.UseHandler(r)
+
 	go func() {
-		if err := server.ListenAndServe(); err != nil {
-			log.Fatalln(err)
-		}
+		n.Run(port)
 	}()
 
-	osChan := make(chan os.Signal)
-	signal.Notify(osChan, os.Interrupt)
-	signal.Notify(osChan, os.Kill)
+	interruptChannel := make(chan os.Signal)
+	signal.Notify(interruptChannel, os.Interrupt)
+	signal.Notify(interruptChannel, os.Kill)
 
-	sig := <-osChan
+	sig := <-interruptChannel
 	fmt.Println("Received Signal: ", sig)
 
 	tc, _ := context.WithTimeout(context.Background(), 5*time.Second)

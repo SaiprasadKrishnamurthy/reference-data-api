@@ -65,7 +65,9 @@ func (c *TagsController) Tags(rw http.ResponseWriter, r *http.Request, p httprou
 }
 
 func findWords(input string, tokens []string) []string {
-	closestIndex := sort.Search(len(tokens), func(i int) bool { return input <= tokens[i] })
+	closestIndex := sort.Search(len(tokens), func(i int) bool {
+		return input <= tokens[i]
+	})
 	radius := totalCandidates / 2
 
 	var start, end int
